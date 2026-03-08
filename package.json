@@ -1,0 +1,27 @@
+{
+  "name": "antigravity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "live2d-widget": "^3.1.4",
+    "live2d-widget-model-miku": "^1.0.5",
+    "multer": "^2.1.1",
+    "pixi-live2d-display": "^0.4.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@ngrok/ngrok": "^1.7.0"
+  }
+}

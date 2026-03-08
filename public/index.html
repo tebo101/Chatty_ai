@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="left-actions">
+                <a href="/dashboard.html" class="btn-icon" aria-label="Back to Dashboard" title="Dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </a>
+            </div>
+
+            <h1 id="chat-title">Character Chat</h1>
+
+            <div class="header-actions">
+                <button id="reset-btn" class="btn-icon btn-icon-danger" aria-label="Reset Chat" title="Reset Chat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                <button id="personality-btn" class="btn-icon personality-button" aria-label="AI Personality Settings"
+                    title="AI Personality">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Live2D Model Panel -->
+            <div id="live2d-container" class="live2d-container">
+                <canvas id="live2d-canvas"></canvas>
+                <div id="mood-indicator" class="mood-indicator mood-neutral">😊 Relaxed</div>
+            </div>
+
+            <!-- Chat Interface -->
+            <main class="chat-interface">
+                <div id="chat-history" class="chat-history">
+                    <!-- Messages will appear here -->
+                    <div class="message ai-message">
+                        <div class="avatar">AI</div>
+                        <div class="message-content">Hello!
+                            nice to meet you</div>
+                    </div>
+                </div>
+
+                <div class="controls-container">
+                    <div class="status-indicator">
+                        <span id="system-status">Ready</span>
+                        <span id="recording-pulse" class="pulse hidden"></span>
+                    </div>
+
+                    <div class="input-row">
+                        <input type="text" id="text-input" class="text-input" placeholder="Type a message..."
+                            autocomplete="off" />
+                        <button id="send-btn" class="send-button" aria-label="Send Message">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22"
+                                height="22">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                            </svg>
+                        </button>
+                        <button id="mic-btn" class="mic-button" aria-label="Microphone">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                class="mic-icon">
+                                <path
+                                    d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                                <path
+                                    d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Personality Modal -->
+    <div id="personality-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>AI Personality</h2>
+                <button id="modal-close-btn" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="personality-text"
+                        style="display:block; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.85rem;">Personality
+                        Prompt</label>
+                    <textarea id="personality-text" rows="4"
+                        placeholder="e.g. You are a kind hearted girl who loves to talk to people"></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="edit-welcome"
+                        style="display:block; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.85rem;">Welcome
+                        Message</label>
+                    <textarea id="edit-welcome" rows="2"
+                        placeholder="First message the bot will send upon reset."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-avatar"
+                        style="display:block; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.85rem;">Change
+                        Profile Picture</label>
+                    <input type="file" id="edit-avatar"
+                        style="width: 100%; border: 1px solid var(--glass-border); padding: 8px; border-radius: 8px; color: var(--text-primary); background: rgba(0,0,0,0.2);"
+                        accept=".jpg,.jpeg,.png,.webp,.gif" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="modal-save-btn" class="modal-btn modal-btn-save">Save Personality</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Live2D Dependencies (order matters) -->
+    <script src="lib/pixi.min.js"></script>
+    <script src="lib/live2dcubismcore.min.js"></script>
+    <script>
+        // Expose PIXI globally so pixi-live2d-display can find it
+        if (typeof PIXI !== 'undefined') {
+            window.PIXI = PIXI;
+            console.log('[Live2D] PIXI found, version:', PIXI.VERSION);
+        } else {
+            console.error('[Live2D] PIXI not found!');
+        }
+        if (typeof Live2DCubismCore !== 'undefined') {
+            console.log('[Live2D] Cubism 4 Core found');
+        } else {
+            console.error('[Live2D] Cubism 4 Core not found!');
+        }
+    </script>
+    <script src="lib/cubism4.min.js"></script>
+    <script>
+        if (typeof PIXI !== 'undefined' && PIXI.live2d) {
+            console.log('[Live2D] PIXI.live2d keys:', Object.keys(PIXI.live2d).join(', '));
+        }
+    </script>
+
+    <script src="live2d.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

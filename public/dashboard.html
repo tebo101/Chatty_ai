@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Chatty_AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Chatty.ai</h1>
+            <p>Made by Tebo_zo</p>
+            <button id="add-character-btn" class="add-char-btn" aria-label="Add Character" title="Upload New Character">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add Character</span>
+            </button>
+        </header>
+
+        <div class="dashboard-content">
+            <div id="character-grid" class="character-grid">
+                <!-- Character cards injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Character Modal -->
+    <div id="upload-modal" class="modal-overlay hidden">
+        <div class="modal-card upload-card">
+            <div class="modal-header">
+                <h2>Upload Custom Character</h2>
+                <button id="upload-close-btn" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-form">
+                    <div class="form-group">
+                        <label for="char-name">Character Name</label>
+                        <input type="text" id="char-name" class="text-input form-input" required
+                            placeholder="e.g. Kasane Teto, Neru" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="char-personality">Personality Prompt</label>
+                        <textarea id="char-personality" rows="3" required
+                            placeholder="You are a pirate named Captain Sparrow. You speak in pirate slang..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="char-welcome">Welcome Message</label>
+                        <textarea id="char-welcome" rows="2" placeholder="Ahoy matey! Ready to set sail?"></textarea>
+                        <small class="form-help">Optional: First message the bot sends.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="char-avatar">Profile Picture</label>
+                        <input type="file" id="char-avatar" class="text-input form-input file-input-simple"
+                            accept=".jpg,.jpeg,.png,.webp,.gif" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="char-zip">Live2D Model (ZIP file)</label>
+                        <div class="file-drop-area">
+                            <input type="file" id="char-zip" class="file-input" accept=".zip" />
+                            <div class="file-msg">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" width="24" height="24" style="margin-bottom:8px">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Click or drag ZIP model here</span>
+                                <div id="file-name" class="file-name-display"></div>
+                            </div>
+                        </div>
+                        <small class="form-help">Must contain a <code>.model3.json</code> file inside. Optional: Leave
+                            blank for text-only.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="upload-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
+                <button id="upload-save-btn" class="modal-btn modal-btn-save">Upload Character</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
