@@ -13,8 +13,8 @@
 <body class="dashboard-body">
     <div class="dashboard-container">
         <header class="dashboard-header">
-            <h1>Chatty.ai</h1>
-            <p>Made by Tebo_zo</p>
+            <h1>Chatty_AI</h1>
+            <p>Made by Tebo_zo powered by LM Studio</p>
             <button id="add-character-btn" class="add-char-btn" aria-label="Add Character" title="Upload New Character">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
@@ -64,33 +64,34 @@
                         <input type="file" id="char-avatar" class="text-input form-input file-input-simple"
                             accept=".jpg,.jpeg,.png,.webp,.gif" />
                     </div>
+            </div>
 
-                    <div class="form-group">
-                        <label for="char-zip">Live2D Model (ZIP file)</label>
-                        <div class="file-drop-area">
-                            <input type="file" id="char-zip" class="file-input" accept=".zip" />
-                            <div class="file-msg">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" width="24" height="24" style="margin-bottom:8px">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <span>Click or drag ZIP model here</span>
-                                <div id="file-name" class="file-name-display"></div>
-                            </div>
-                        </div>
-                        <small class="form-help">Must contain a <code>.model3.json</code> file inside. Optional: Leave
-                            blank for text-only.</small>
+            <div class="form-group">
+                <label for="char-zip">Live2D Model (ZIP file)</label>
+                <div class="file-drop-area">
+                    <input type="file" id="char-zip" class="file-input" accept=".zip" />
+                    <div class="file-msg">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"
+                            style="margin-bottom:8px">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Click or drag ZIP model here</span>
+                        <div id="file-name" class="file-name-display"></div>
                     </div>
-                </form>
+                </div>
+                <small class="form-help">Must contain a <code>.model3.json</code> file inside. Optional: Leave
+                    blank for text-only.</small>
             </div>
-            <div class="modal-footer">
-                <button id="upload-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
-                <button id="upload-save-btn" class="modal-btn modal-btn-save">Upload Character</button>
-            </div>
+            </form>
         </div>
+        <div class="modal-footer">
+            <button id="upload-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
+            <button id="upload-save-btn" class="modal-btn modal-btn-save">Upload Character</button>
+        </div>
+    </div>
     </div>
 
     <!-- Toast notification -->
