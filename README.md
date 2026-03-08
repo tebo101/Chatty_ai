@@ -26,8 +26,8 @@ Follow these steps to get the project running on your local machine.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/antigravity.git
-   cd antigravity
+   git clone https://github.com/YOUR_USERNAME/Chatty_AI.git
+   cd Chatty_AI
    ```
 
 2. **Install dependencies:**
