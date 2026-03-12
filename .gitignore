@@ -1,3 +1,7 @@
 node_modules/
 .env
 uploads/
+internal/
+public/user_pfp/
+voicevox-windows-directml-0.25.1/
+*.zip

@@ -168,9 +168,10 @@
         const name = motionNames[Math.floor(Math.random() * motionNames.length)];
 
         try {
-            const motionManager = model.internalModel.motionManager;
-            // In Cubism 4 pixi-live2d-display, startMotion takes (group, index, priority)
-            motionManager.startMotion(name, 0, 2 /* NORMAL priority */);
+            // Use high-level pixi-live2d-display motion API
+            // This abstraction works automatically for both Cubism 2 and Cubism 4 models.
+            // .motion(group, index, priority) -> We pass the name as the group, index 0, priority 2 (NORMAL)
+            model.motion(name, 0, 2);
         } catch (e) {
             console.warn('[Live2D] Could not play motion:', name, e);
         }

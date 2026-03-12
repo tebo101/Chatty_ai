@@ -3,100 +3,222 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chatty_AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatty_AI Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
 </head>
 
-<body class="dashboard-body">
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1>Chatty_AI</h1>
-            <p>Made by Tebo_zo powered by LM Studio</p>
-            <button id="add-character-btn" class="add-char-btn" aria-label="Add Character" title="Upload New Character">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">C.</div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" title="Home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                </div>
+                <!-- GitHub -->
+                <a href="https://github.com/tebo101/Chatty_ai" target="_blank" class="nav-item" title="GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                        </path>
+                    </svg>
+                </a>
+                <!-- Instagram -->
+                <a href="https://www.instagram.com/t_e_b_o.art" target="_blank" class="nav-item" title="Instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                </a>
+                <!-- Dark Mode Toggle -->
+                <div class="nav-item" id="theme-toggle" title="Toggle Dark Mode">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </div>
+                <!-- Profile Settings -->
+                <div class="nav-item" id="open-profile-btn" title="Profile Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+            </nav>
+            <div class="sidebar-bottom nav-item" title="Logout/Exit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                <span>Add Character</span>
-            </button>
-        </header>
-
-        <div class="dashboard-content">
-            <div id="character-grid" class="character-grid">
-                <!-- Character cards injected here via JS -->
             </div>
-        </div>
-    </div>
+        </aside>
 
-    <!-- Add Character Modal -->
-    <div id="upload-modal" class="modal-overlay hidden">
-        <div class="modal-card upload-card">
-            <div class="modal-header">
-                <h2>Upload Custom Character</h2>
-                <button id="upload-close-btn" class="modal-close" aria-label="Close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="upload-form">
-                    <div class="form-group">
-                        <label for="char-name">Character Name</label>
-                        <input type="text" id="char-name" class="text-input form-input" required
-                            placeholder="e.g. Kasane Teto, Neru" />
-                    </div>
+        <!-- MAIN CONTENT (Greeting & List) -->
+        <main class="main-content">
+            <!-- Greeting Banner -->
+            <section class="greeting-section">
+                <div class="greeting-text">
+                    <h1>Hello mykisah12!</h1>
+                    <p>It's good to see you again.</p>
+                </div>
+                <div class="greeting-avatar">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="avatar-bg-desktop" cx="50" cy="50" r="48" fill="#f0f0f0" stroke="#000"
+                            stroke-width="4" />
+                        <rect class="avatar-bg-mobile" x="2" y="2" width="96" height="96" rx="24" fill="#f0f0f0"
+                            stroke="#000" stroke-width="4" />
+                        <circle cx="35" cy="40" r="5" fill="#000" />
+                        <circle cx="65" cy="40" r="5" fill="#000" />
+                        <path d="M30 65 Q50 85 70 65" stroke="#000" stroke-width="4" fill="none"
+                            stroke-linecap="round" />
+                    </svg>
+                </div>
+            </section>
 
-                    <div class="form-group">
-                        <label for="char-personality">Personality Prompt</label>
-                        <textarea id="char-personality" rows="3" required
-                            placeholder="You are a pirate named Captain Sparrow. You speak in pirate slang..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="char-welcome">Welcome Message</label>
-                        <textarea id="char-welcome" rows="2" placeholder="Ahoy matey! Ready to set sail?"></textarea>
-                        <small class="form-help">Optional: First message the bot sends.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="char-avatar">Profile Picture</label>
-                        <input type="file" id="char-avatar" class="text-input form-input file-input-simple"
-                            accept=".jpg,.jpeg,.png,.webp,.gif" />
-                    </div>
-            </div>
-
-            <div class="form-group">
-                <label for="char-zip">Live2D Model (ZIP file)</label>
-                <div class="file-drop-area">
-                    <input type="file" id="char-zip" class="file-input" accept=".zip" />
-                    <div class="file-msg">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"
-                            style="margin-bottom:8px">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span>Click or drag ZIP model here</span>
-                        <div id="file-name" class="file-name-display"></div>
+            <!-- Active Status (Currently chatting or last character) -->
+            <section class="status-banner">
+                <div class="status-left">
+                    <div class="progress-ring">AI</div>
+                    <div class="status-info">
+                        <strong>Gemma3 4B</strong>
+                        <span>powered by LM Studio</span>
                     </div>
                 </div>
-                <small class="form-help">Must contain a <code>.model3.json</code> file inside. Optional: Leave
-                    blank for text-only.</small>
+                <div class="status-actions">
+                    <div class="progress-ring" style="font-size: 10px;">ON</div>
+                    <button class="btn-continue" onclick="window.location.href='/index.html'">Continue Chat</button>
+                    <div class="nav-arrows">
+                        <button class="arrow-btn">&larr;</button>
+                        <button class="arrow-btn">&rarr;</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Characters List -->
+            <section class="characters-section">
+                <div class="section-header">
+                    <h2>Characters</h2>
+                    <div class="filter-tabs">
+                        <span class="filter-tab active">All Characters</span>
+                        <span class="filter-tab">The Newest</span>
+                        <span class="filter-tab">Most Popular</span>
+                    </div>
+                </div>
+
+                <div class="character-list" id="character-list">
+                    <!-- Characters injected by JS -->
+                    <div style="text-align: center; color: #999; padding: 40px;">Loading characters...</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- RIGHT PANEL (Stats & Actions) -->
+        <aside class="right-panel">
+            <div class="top-bar">
+                <div class="search-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="character-search" placeholder="Search characters...">
+                </div>
+                <div class="user-profile">
+                    <div class="notification">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div class="profile-pic">
+                        <!-- Profile pic placeholder -->
+                    </div>
+                </div>
             </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button id="upload-cancel-btn" class="modal-btn modal-btn-cancel">Cancel</button>
-            <button id="upload-save-btn" class="modal-btn modal-btn-save">Upload Character</button>
-        </div>
-    </div>
+
+            <!-- Stats -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3 id="stat-count">0</h3>
+                    <span>Characters<br>Available</span>
+                </div>
+                <div class="stat-card">
+                    <h3 id="stat-live2d">0</h3>
+                    <span>Live2D<br>Models</span>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <h3>CREATE CHARACTER</h3>
+                <form id="upload-form">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="char-name" class="form-input" required placeholder="e.g. Kasane Teto" />
+                    </div>
+                    <div class="form-group">
+                        <label>Personality Prompt</label>
+                        <textarea id="char-personality" class="form-input" rows="3" required
+                            placeholder="You are a virtual singer..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Live2D Model (.zip)</label>
+                        <label class="file-drop" id="zip-drop-area" for="char-zip">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg><br>
+                            <span id="file-name">Click or drag ZIP model here</span>
+                            <input type="file" id="char-zip" accept=".zip" />
+                        </label>
+                    </div>
+                    <button type="button" id="upload-save-btn" class="btn-upload">Upload Character</button>
+                </form>
+            </div>
+        </aside>
     </div>
 
-    <!-- Toast notification -->
+    <!-- User Profile Modal -->
+    <div id="user-profile-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>User Profile Settings</h2>
+                <button class="close-modal" id="close-user-profile">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 8px;">Your Name</label>
+                    <input type="text" id="user-name-input" class="form-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 8px;">Profile Picture</label>
+                    <div style="display:flex; align-items:center; gap: 15px;">
+                        <div id="user-pfp-preview" class="profile-pic" style="flex-shrink:0;"></div>
+                        <input type="file" id="user-pfp-input" accept="image/*" style="font-size: 0.8rem;">
+                    </div>
+                </div>
+                <button type="button" id="save-user-profile" class="btn-upload" style="width:100%;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
-
     <script src="dashboard.js"></script>
 </body>
 

@@ -117,6 +117,16 @@
                         placeholder="First message the bot will send upon reset."></textarea>
                 </div>
 
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="edit-voice"
+                        style="display:block; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.85rem;">Voicevox
+                        Model</label>
+                    <select id="edit-voice"
+                        style="width: 100%; border: 1px solid var(--glass-border); padding: 8px; border-radius: 8px; color: var(--text-primary); background: rgba(0,0,0,0.5); -webkit-appearance: none; appearance: none; outline: none;">
+                        <option value="2">Loading voices...</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="edit-avatar"
                         style="display:block; margin-bottom: 4px; color: var(--text-secondary); font-size: 0.85rem;">Change
@@ -138,6 +148,7 @@
 
     <!-- Live2D Dependencies (order matters) -->
     <script src="lib/pixi.min.js"></script>
+    <script src="lib/live2d.core.js"></script>
     <script src="lib/live2dcubismcore.min.js"></script>
     <script>
         // Expose PIXI globally so pixi-live2d-display can find it
@@ -153,7 +164,7 @@
             console.error('[Live2D] Cubism 4 Core not found!');
         }
     </script>
-    <script src="lib/cubism4.min.js"></script>
+    <script src="/live2d/lib/index.min.js"></script>
     <script>
         if (typeof PIXI !== 'undefined' && PIXI.live2d) {
             console.log('[Live2D] PIXI.live2d keys:', Object.keys(PIXI.live2d).join(', '));

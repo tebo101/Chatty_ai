@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const personalityText = document.getElementById('personality-text');
     const editWelcome = document.getElementById('edit-welcome');
     const editAvatar = document.getElementById('edit-avatar');
+    const editVoice = document.getElementById('edit-voice');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalSaveBtn = document.getElementById('modal-save-btn');
@@ -24,6 +25,95 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeCharacterId = 'default-miku';
     let activeCharacterAvatar = null;
     let initialWelcomeMessage = 'Hello! Nice to meet you.';
+    let activeCharacterVoiceId = 2; // Default to Shikoku Metan (Normal)
+    let userProfile = { name: 'User', pfp: null };
+
+    // Fetch User Profile
+    async function fetchUserProfile() {
+        try {
+            const res = await fetch('/api/user/profile');
+            if (res.ok) {
+                userProfile = await res.json();
+            }
+        } catch (e) {
+            console.warn('Could not fetch user profile', e);
+        }
+    }
+    fetchUserProfile();
+
+    // Fetch Voicevox Speakers
+    async function fetchVoicevoxSpeakers() {
+        try {
+            const res = await fetch('/api/tts/speakers');
+            if (res.ok) {
+                const speakers = await res.json();
+                if (editVoice) {
+                    editVoice.innerHTML = '';
+                    speakers.forEach(speaker => {
+                        const option = document.createElement('option');
+                        option.value = speaker.id;
+                        option.textContent = speaker.name;
+                        editVoice.appendChild(option);
+                    });
+
+                    // Re-apply if already loaded
+                    editVoice.value = activeCharacterVoiceId;
+                }
+            } else {
+                if (editVoice) editVoice.innerHTML = '<option value="2">Engine Offline</option>';
+            }
+        } catch (e) {
+            console.warn('Could not fetch Voicevox speakers', e);
+            if (editVoice) editVoice.innerHTML = '<option value="2">Engine Offline</option>';
+        }
+    }
+    fetchVoicevoxSpeakers();
+
+    function applyAvatarBackground(avatarUrl) {
+        if (!avatarUrl || !avatarUrl.startsWith('/avatars/')) {
+            document.body.style.backgroundImage = '';
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+
+            try {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let r = 0, g = 0, b = 0;
+                let count = 0;
+
+                for (let i = 0; i < data.length; i += 16) {
+                    if (data[i + 3] < 128) continue;
+                    r += data[i];
+                    g += data[i + 1];
+                    b += data[i + 2];
+                    count++;
+                }
+
+                if (count > 0) {
+                    r = Math.floor(r / count);
+                    g = Math.floor(g / count);
+                    b = Math.floor(b / count);
+
+                    document.body.style.backgroundImage = `
+                        radial-gradient(at 0% 0%, rgba(${r}, ${g}, ${b}, 0.7) 0px, transparent 60%),
+                        radial-gradient(at 100% 100%, rgba(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)}, 0.4) 0px, transparent 60%)
+                    `;
+                }
+            } catch (e) {
+                console.error('Error extracting color from avatar', e);
+            }
+        };
+        img.src = avatarUrl;
+    }
 
     function openModal() {
         personalityModal.classList.remove('hidden');
@@ -65,6 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 editWelcome.value = char.welcomeMessage || '';
                 editAvatar.value = '';
 
+                activeCharacterVoiceId = char.voiceId !== undefined ? char.voiceId : 2;
+                if (editVoice) editVoice.value = activeCharacterVoiceId;
+
+                applyAvatarBackground(activeCharacterAvatar);
+
                 // Sync the selected character's personality to the backend immediately
                 // so the server's global systemPrompt matches the frontend.
                 try {
@@ -96,7 +191,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 // New chat, show welcome message
-                setTimeout(() => appendMessage('ai', initialWelcomeMessage), 500);
+                let welcome = initialWelcomeMessage;
+                if (userProfile && userProfile.name && userProfile.name !== 'User') {
+                    welcome = `${userProfile.name}, ${initialWelcomeMessage}`;
+                }
+                setTimeout(() => appendMessage('ai', welcome), 500);
             }
         } catch (err) {
             console.error('Failed to load personality:', err);
@@ -120,6 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('personality', text);
         if (welcomeMessage) formData.append('welcomeMessage', welcomeMessage);
         if (avatarImage) formData.append('avatarImage', avatarImage);
+        if (editVoice && editVoice.value) {
+            formData.append('voiceId', editVoice.value);
+            activeCharacterVoiceId = parseInt(editVoice.value, 10);
+        }
 
         try {
             const res = await fetch(`/api/characters/${activeCharacterId}`, {
@@ -135,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('activeCharacter', JSON.stringify(updatedChar));
             activeCharacterAvatar = updatedChar.avatar || updatedChar.name.charAt(0);
             initialWelcomeMessage = updatedChar.welcomeMessage || `Hello! My name is ${updatedChar.name}.`;
+
+            applyAvatarBackground(activeCharacterAvatar);
 
             // Clear history and restart to apply new personality visually
             await fetch('/api/chat/reset', {
@@ -299,41 +404,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Speech Synthesis Setup (TTS)
     const synth = window.speechSynthesis;
+    let currentAudio = null;
 
-    function speak(text) {
-        if (synth.speaking) {
-            synth.cancel();
-        }
-        if (text !== '') {
-            const utterThis = new SpeechSynthesisUtterance(text);
+    async function speak(text) {
+        stopSpeaking(); // Cancel any ongoing speech
 
-            const voices = synth.getVoices();
-            const preferredVoice = voices.find(voice => voice.name.includes('Google') || voice.lang === 'en-US');
-            if (preferredVoice) {
-                utterThis.voice = preferredVoice;
-            }
+        // Remove text between asterisks (e.g. *blushes*) for spoken audio
+        const spokenText = (text || '').replace(/\*[\s\S]*?\*/g, '').trim();
+        if (!spokenText) return;
 
-            utterThis.pitch = 1;
-            utterThis.rate = 1;
+        systemStatus.textContent = 'Generating Voice...';
 
-            utterThis.onstart = () => {
-                systemStatus.textContent = 'Speaking...';
-            };
+        try {
+            // Attempt to use Voicevox through our backend proxy
+            const response = await fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: spokenText, speaker: activeCharacterVoiceId })
+            });
 
-            utterThis.onend = () => {
+            if (!response.ok) throw new Error('Voicevox unavailable');
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudio = new Audio(audioUrl);
+
+            currentAudio.onplay = () => systemStatus.textContent = 'Speaking...';
+            currentAudio.onended = () => {
                 systemStatus.textContent = 'Ready';
+                URL.revokeObjectURL(audioUrl); // Cleanup memory
+                currentAudio = null;
             };
-
-            utterThis.onerror = (e) => {
-                console.error('SpeechSynthesisError', e);
+            currentAudio.onerror = () => {
+                console.error('Audio playback error');
                 systemStatus.textContent = 'Ready';
+                fallbackSpeak(text); // Fallback if audio file fails to play
             };
 
-            synth.speak(utterThis);
+            await currentAudio.play();
+
+        } catch (error) {
+            console.warn('Voicevox failed, falling back to Web Speech API:', error);
+            fallbackSpeak(spokenText);
         }
     }
 
+    function fallbackSpeak(text) {
+        const utterThis = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        const preferredVoice = voices.find(voice => voice.name.includes('Google') || voice.lang === 'en-US');
+        if (preferredVoice) utterThis.voice = preferredVoice;
+
+        utterThis.pitch = 1;
+        utterThis.rate = 1;
+
+        utterThis.onstart = () => systemStatus.textContent = 'Speaking...';
+        utterThis.onend = () => systemStatus.textContent = 'Ready';
+        utterThis.onerror = (e) => {
+            console.error('SpeechSynthesisError', e);
+            systemStatus.textContent = 'Ready';
+        };
+
+        synth.speak(utterThis);
+    }
+
     function stopSpeaking() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+            systemStatus.textContent = 'Ready';
+        }
         if (synth.speaking) {
             synth.cancel();
         }
@@ -419,7 +559,19 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarDiv.classList.add('avatar');
 
         if (sender === 'user') {
-            avatarDiv.textContent = 'U';
+            if (userProfile && userProfile.pfp) {
+                const img = document.createElement('img');
+                img.src = userProfile.pfp;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '12px';
+                avatarDiv.appendChild(img);
+                avatarDiv.style.background = 'transparent';
+                avatarDiv.style.border = 'none';
+            } else {
+                avatarDiv.textContent = userProfile ? userProfile.name.charAt(0).toUpperCase() : 'U';
+            }
         } else {
             if (activeCharacterAvatar && activeCharacterAvatar.startsWith('/avatars/')) {
                 const img = document.createElement('img');

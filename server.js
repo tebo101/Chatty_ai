@@ -10,6 +10,9 @@ const multer = require('multer');
 const AdmZip = require('adm-zip');
 const { v4: uuidv4 } = require('uuid');
 const ngrok = require('@ngrok/ngrok');
+const translate = require('translate-google');
+const { spawn } = require('child_process');
+let voxProcess = null;
 
 
 // Ensure models directory exists
@@ -25,24 +28,64 @@ if (!fs.existsSync(avatarsDir)) {
 }
 
 // Multer setup for zip uploads
+const CHARACTERS_FILE = path.join(__dirname, 'characters.json');
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const AVATARS_DIR = path.join(__dirname, 'public', 'avatars');
+const USER_PFP_DIR = path.join(__dirname, 'public', 'user_pfp');
+const INTERNAL_DIR = path.join(__dirname, 'internal');
+const USER_PROFILE_FILE = path.join(INTERNAL_DIR, 'user.json');
+
+[modelsDir, UPLOADS_DIR, AVATARS_DIR, USER_PFP_DIR, INTERNAL_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
 const upload = multer({
-    dest: path.join(__dirname, 'uploads'),
+    dest: UPLOADS_DIR,
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Load characters from JSON
-const charactersFile = path.join(__dirname, 'characters.json');
-let characters = [];
-try {
-    if (fs.existsSync(charactersFile)) {
-        characters = JSON.parse(fs.readFileSync(charactersFile, 'utf8'));
+// Multer setup for user profile picture uploads
+const userPfpStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, USER_PFP_DIR);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `pfp_${Date.now()}${ext}`);
     }
-} catch (error) {
-    console.error('Error loading characters.json:', error);
+});
+const userPfpUpload = multer({
+    storage: userPfpStorage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+
+// Load characters
+let characters = [];
+if (fs.existsSync(CHARACTERS_FILE)) {
+    try {
+        characters = JSON.parse(fs.readFileSync(CHARACTERS_FILE, 'utf8'));
+    } catch (e) {
+        console.error('Error loading characters.json:', e);
+    }
+}
+
+// Load or Initialize user profile
+let userProfile = { name: 'User', pfp: null };
+if (fs.existsSync(USER_PROFILE_FILE)) {
+    try {
+        userProfile = JSON.parse(fs.readFileSync(USER_PROFILE_FILE, 'utf8'));
+    } catch (e) {
+        console.error('Error loading user.json:', e);
+    }
+}
+
+function saveUserProfile() {
+    fs.writeFileSync(USER_PROFILE_FILE, JSON.stringify(userProfile, null, 2));
 }
 
 function saveCharacters() {
-    fs.writeFileSync(charactersFile, JSON.stringify(characters, null, 2));
+    fs.writeFileSync(CHARACTERS_FILE, JSON.stringify(characters, null, 2));
 }
 
 // LM Studio configuration
@@ -133,6 +176,29 @@ app.get('/api/chat/history', (req, res) => {
     res.json({ history: uiHistory });
 });
 
+// --- User Profile Endpoints ---
+app.get('/api/user/profile', (req, res) => {
+    res.json(userProfile);
+});
+
+app.post('/api/user/profile', userPfpUpload.single('pfp'), (req, res) => {
+    const { name } = req.body;
+    if (name) userProfile.name = name;
+
+    if (req.file) {
+        // Delete old pfp if exists
+        if (userProfile.pfp) {
+            const oldPath = path.join(__dirname, 'public', userProfile.pfp);
+            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        }
+        userProfile.pfp = `/user_pfp/${req.file.filename}`;
+    }
+
+    saveUserProfile();
+    res.json({ message: 'Profile updated', user: userProfile });
+});
+
+
 // --- Characters API ---
 app.get('/api/characters', (req, res) => {
     res.json(characters);
@@ -189,7 +255,7 @@ app.post('/api/characters', characterUploads, (req, res) => {
                     if (fs.statSync(fullPath).isDirectory()) {
                         const found = findModelJson(fullPath);
                         if (found) return found;
-                    } else if (file.endsWith('.model3.json')) {
+                    } else if (file.endsWith('model3.json') || file.endsWith('model.json')) {
                         return fullPath;
                     }
                 }
@@ -200,7 +266,7 @@ app.post('/api/characters', characterUploads, (req, res) => {
 
             if (!modelFilePath) {
                 // Keep the character but assign no model if none found
-                console.error('No .model3.json found in the uploaded zip.');
+                console.error('No model3.json or model.json found in the uploaded zip.');
             } else {
                 // Create a relative path accessible by the frontend
                 modelPath = `/models/${characterId}/${path.relative(targetDir, modelFilePath).replace(/\\/g, '/')}`;
@@ -227,11 +293,11 @@ app.post('/api/characters', characterUploads, (req, res) => {
     }
 });
 
-// Update character personality, welcome message, and avatar
+// Update character personality, welcome message, avatar, and voiceId
 app.put('/api/characters/:id', characterUploads, (req, res) => {
     try {
         const charId = req.params.id;
-        const { personality, welcomeMessage } = req.body;
+        const { personality, welcomeMessage, voiceId } = req.body;
 
         const charIndex = characters.findIndex(c => c.id === charId);
         if (charIndex === -1) {
@@ -246,6 +312,10 @@ app.put('/api/characters/:id', characterUploads, (req, res) => {
 
         if (welcomeMessage) {
             character.welcomeMessage = welcomeMessage;
+        }
+
+        if (voiceId) {
+            character.voiceId = parseInt(voiceId, 10);
         }
 
         if (req.files && req.files['avatarImage']) {
@@ -267,8 +337,11 @@ app.put('/api/characters/:id', characterUploads, (req, res) => {
         }
 
         // If 'default-miku', update the in-memory system config as well if it's the active one
-        if (charId === 'default-miku' && chatHistory.length === 0) {
-            systemPrompt = character.personality;
+        if (charId === 'default-miku') {
+            const session = getSession('default-miku');
+            if (session.chatHistory.length === 0) {
+                systemPrompt = character.personality;
+            }
         }
 
         saveCharacters();
@@ -319,13 +392,13 @@ function analyzeMood(text) {
     const moodKeywords = {
         happy: ['happy', 'glad', 'great', 'wonderful', 'fantastic', 'awesome', 'excellent',
             'love', 'enjoy', 'excited', 'joy', 'cheerful', 'delighted', 'amazing',
-            'yay', 'haha', 'lol', '😊', '😄', '🎉', 'good news', 'congratulations'],
+            'yay', 'haha', 'blushes', '😊', '😄', '🎉', 'good news', 'congratulations'],
         sad: ['sad', 'sorry', 'unfortunately', 'regret', 'miss', 'disappoint', 'unhappy',
             'heartbreak', 'lonely', 'depressed', 'crying', 'tears', 'tragic', 'grief',
             'apolog', 'condolence', 'sympathy', 'loss'],
         angry: ['angry', 'furious', 'annoyed', 'frustrated', 'outraged', 'hate',
             'terrible', 'awful', 'unacceptable', 'ridiculous', 'absurd', 'rage',
-            'irritat', 'mad', 'disgust'],
+            'irritate', 'mad', 'disgust'],
         surprised: ['wow', 'surprise', 'amazing', 'incredible', 'unbelievable', 'unexpected',
             'shocking', 'astonish', 'whoa', 'really?', 'no way', 'oh my',
             'remarkable', 'extraordinary', 'mind-blowing', '😮', '😲']
@@ -424,6 +497,73 @@ Act naturally, speak in the tone of the character, and do not acknowledge these 
     }
 });
 
+// ----------------------------------------------------------------------
+// Voicevox Proxy Endpoint
+// ----------------------------------------------------------------------
+app.post('/api/tts', async (req, res) => {
+    try {
+        const { text, speaker = 1 } = req.body;
+        if (!text) return res.status(400).json({ error: 'Text is required for TTS' });
+
+        // Translate the input text to Japanese so Voicevox can read it
+        console.log(`[Voicevox] Original Text: ${text}`);
+        let jpText = text;
+        try {
+            jpText = await translate(text, { to: 'ja' });
+            console.log(`[Voicevox] Translated to JA: ${jpText}`);
+        } catch (tErr) {
+            console.warn(`[Voicevox] Translation failed, attempting raw input. Error:`, tErr.message);
+        }
+
+        // Generate query
+        const queryRes = await fetch(`http://127.0.0.1:50021/audio_query?text=${encodeURIComponent(jpText)}&speaker=${speaker}`, { method: 'POST' });
+        if (!queryRes.ok) throw new Error(`Query failed: ${queryRes.statusText}`);
+        const queryJson = await queryRes.json();
+
+        // Synthesize wav
+        const synthRes = await fetch(`http://127.0.0.1:50021/synthesis?speaker=${speaker}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(queryJson)
+        });
+        if (!synthRes.ok) throw new Error(`Synthesis failed: ${synthRes.statusText}`);
+
+        // Pipe to client
+        const audioBuffer = await synthRes.arrayBuffer();
+        res.set('Content-Type', 'audio/wav');
+        res.send(Buffer.from(audioBuffer));
+    } catch (error) {
+        console.error('Voicevox Proxy Error:', error.message);
+        res.status(503).json({ error: 'Voicevox engine unreachable on port 50021' });
+    }
+});
+
+// Fetch all available Voicevox Speakers
+app.get('/api/tts/speakers', async (req, res) => {
+    try {
+        const fetchRes = await fetch('http://127.0.0.1:50021/speakers');
+        if (!fetchRes.ok) throw new Error(`Speaker endpoint failed: ${fetchRes.status}`);
+
+        const speakersJson = await fetchRes.json();
+        const formattedSpeakers = [];
+
+        // Voicevox returns a nested array of speakers with multiple styles each
+        speakersJson.forEach(character => {
+            character.styles.forEach(style => {
+                formattedSpeakers.push({
+                    id: style.id,
+                    name: `${character.name} - ${style.name}`
+                });
+            });
+        });
+
+        res.json(formattedSpeakers);
+    } catch (error) {
+        console.error('Error fetching speakers', error.message);
+        res.status(503).json({ error: 'Voicevox engine unreachable on port 50021' });
+    }
+});
+
 app.listen(port, '0.0.0.0', () => {
     const os = require('os');
     const nets = os.networkInterfaces();
@@ -441,6 +581,30 @@ app.listen(port, '0.0.0.0', () => {
     console.log(`LAN access: http://${lanIP}:${port}`);
     console.log(`Connecting to LM Studio at ${LM_STUDIO_URL}`);
 
+    // Automate Voicevox startup
+    const VOX_PATH = process.env.VOICEVOX_ENGINE_PATH;
+    if (VOX_PATH && fs.existsSync(VOX_PATH)) {
+        console.log(`[Voicevox] Starting engine at: ${VOX_PATH}`);
+        voxProcess = spawn(VOX_PATH, [], {
+            cwd: path.dirname(VOX_PATH),
+            detached: false
+        });
+
+        voxProcess.stdout.on('data', (data) => {
+            // Optional: console.log(`[Voicevox-Engine] ${data}`);
+        });
+
+        voxProcess.stderr.on('data', (data) => {
+            console.error(`[Voicevox-info] ${data}`);
+        });
+
+        voxProcess.on('close', (code) => {
+            console.log(`[Voicevox] Engine process exited with code ${code}`);
+        });
+    } else {
+        console.log('[Voicevox] Engine path not found or not configured. Please start Voicevox manually.');
+    }
+
     // Automate ngrok startup
     if (process.env.NGROK_AUTHTOKEN) {
         (async () => {
@@ -450,6 +614,7 @@ app.listen(port, '0.0.0.0', () => {
                     .connect();
                 const tunnel = await session.httpEndpoint()
                     .listen();
+                tunnel.forward(`localhost:${port}`);
                 console.log(`[ngrok] Tunnel established at: ${tunnel.url()}`);
             } catch (err) {
                 console.error('[ngrok] Error starting tunnel:', err);
@@ -458,4 +623,20 @@ app.listen(port, '0.0.0.0', () => {
     } else {
         console.log('[ngrok] No authtoken found in .env, skipping automation.');
     }
+});
+
+// Cleanup Voicevox on exit
+const cleanup = () => {
+    if (voxProcess) {
+        console.log('[Voicevox] Shutting down engine...');
+        voxProcess.kill();
+        voxProcess = null;
+    }
+    process.exit();
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+process.on('exit', () => {
+    if (voxProcess) voxProcess.kill();
 });
