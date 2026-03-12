@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🌟 Chatty CLI AI Chatbot</h1>
+  <h1>🌟 Chatty_AI Chatbot</h1>
   <p>An interactive, highly personalized AI Chatbot featuring dynamic Live2D avatars and seamless voice conversations powered by LM Studio and Voicevox.</p>
 </div>
 
